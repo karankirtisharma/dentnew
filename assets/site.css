@@ -156,6 +156,8 @@ h1, h2, h3, h4, p { margin: 0; }
   .js [data-a].in { opacity: 1; transform: none; filter: none; }
   .js [data-a="scale"] { transform: scale(.965); }
   .js [data-a="fade"] { transform: none; }
+  .hero [data-a], .phead [data-a]:not(.phead__art) { opacity: 1; transform: none; filter: none; transition: none; animation: rise 800ms var(--ease) both; animation-delay: calc(var(--d, 0) * 80ms); }
+  @keyframes rise { from { opacity: 0; transform: translateY(22px); filter: blur(6px); } }
 }
 
 /* ---------- hero ---------- */
@@ -419,7 +421,7 @@ h1, h2, h3, h4, p { margin: 0; }
 .phead { padding-top: 14px; }
 .phead__panel { border-radius: 28px; background: var(--grad); padding: clamp(2.4rem, 6vw, 5rem) clamp(1.4rem, 5vw, 4.4rem); position: relative; overflow: hidden; isolation: isolate; }
 .phead__panel.has-art { padding-right: clamp(1.4rem, 20%, 16rem); }
-.phead__art { position: absolute; right: clamp(1.2rem, 5vw, 4.4rem); top: 50%; translate: 0 -50%; width: clamp(5.5rem, 12vw, 9.5rem); height: auto; max-height: 60%; object-fit: contain; z-index: -1; pointer-events: none; filter: drop-shadow(0 18px 30px rgba(18, 60, 48, .12)); }
+.phead__art { position: absolute; right: clamp(1.2rem, calc(34% - 12rem), 15rem); top: 50%; translate: 0 -50%; width: clamp(5.5rem, 12vw, 9.5rem); height: auto; max-height: 60%; object-fit: contain; z-index: -1; pointer-events: none; filter: drop-shadow(0 18px 30px rgba(18, 60, 48, .12)); }
 @media (prefers-reduced-motion: no-preference) { .phead__art { animation: float 7s ease-in-out infinite alternate; } }
 @keyframes float { to { transform: translateY(-8px); } }
 @media (max-width: 760px) { .phead__panel.has-art { padding-right: clamp(1.4rem, 5vw, 4.4rem); padding-top: 2.4rem; } .phead__art { top: 1.4rem; translate: none; right: 1.2rem; margin-right: 0; width: 4.5rem; } }
