@@ -73,7 +73,7 @@
   addEventListener("keydown", e => { if (e.key === "Escape" && menu?.classList.contains("is-open")) openMenu(false); });
 
   /* ---------- appear on entry (once): opacity + rise + blur, staggered ---------- */
-  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { rootMargin: "0px 0px -8% 0px", threshold: 0.06 });
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { rootMargin: "0px 0px -4% 0px", threshold: 0 });
   $$("[data-stagger]").forEach(g => [...g.children].forEach((c, i) => { if (!c.hasAttribute("data-a")) c.setAttribute("data-a", ""); c.style.setProperty("--d", i); }));
   $$("[data-a]").forEach(el => io.observe(el));
 
@@ -135,6 +135,8 @@
       if (e.cancelable) e.preventDefault();
       scrollBy({ top: x0 - x, behavior: "instant" }); x0 = x;
     }, { passive: false });
+    // a sliding row fetches all its photos as it approaches, so cards never slide in blank
+    new IntersectionObserver((es, ob) => { if (es[0].isIntersecting) { $$("img[loading=lazy]", sec).forEach(i => (i.loading = "eager")); ob.disconnect(); } }, { rootMargin: "100% 0px" }).observe(sec);
     pins.set(sec, { on: () => on, start, layout, drive });
   });
   if (pins.size) {

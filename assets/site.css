@@ -575,3 +575,6 @@ html.lenis, html.lenis body { height: auto; }
 .faqside__ph img { width: 100%; height: 100%; object-fit: cover; display: block; }
 @media (min-width: 861px) { .faqside { position: sticky; top: calc(var(--head-h) + 96px); align-self: start; } }
 @media (max-width: 860px) { .faqside__ph { aspect-ratio: 16 / 9; margin: 1rem 0 1.2rem; } }
+
+/* while a photo downloads, its space shows a soft tint instead of a blank gap (logos and illustrations stay transparent) */
+img[loading="lazy"]:not(.phead__art), .hero__art > img { background-color: #E2ECE8; }
