@@ -1,0 +1,6 @@
+# build output and local-only material
+dist/
+content/
+__pycache__/
+*.pdf
+*.zip
