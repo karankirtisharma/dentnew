@@ -136,7 +136,7 @@
       scrollBy({ top: x0 - x, behavior: "instant" }); x0 = x;
     }, { passive: false });
     // a sliding row fetches all its photos as it approaches, so cards never slide in blank
-    new IntersectionObserver((es, ob) => { if (es[0].isIntersecting) { $$("img[loading=lazy]", sec).forEach(i => (i.loading = "eager")); ob.disconnect(); } }, { rootMargin: "100% 0px" }).observe(sec);
+    new IntersectionObserver((es, ob) => { if (es[0].isIntersecting) { $$("img[loading=lazy]", sec).forEach(i => (i.loading = "eager")); ob.disconnect(); } }, { rootMargin: "25% 0px" }).observe(sec);
     pins.set(sec, { on: () => on, start, layout, drive });
   });
   if (pins.size) {
@@ -240,6 +240,12 @@
   });
   const vio = new IntersectionObserver(es => es.forEach(e => { if (!e.isIntersecting && !e.target.paused) e.target.pause(); }), { threshold: 0.35 });
   players.forEach(v => vio.observe(v));
+  // Videos and their covers load only once the row is near, so they never slow the photos above.
+  $$(".vids").forEach(row => new IntersectionObserver((es, ob) => {
+    if (!es[0].isIntersecting) return;
+    $$("video[data-src]", row).forEach(v => { v.poster = v.dataset.poster; v.preload = "metadata"; v.src = v.dataset.src; });
+    ob.disconnect();
+  }, { rootMargin: "75% 0px" }).observe(row));
 
   /* ---------- sub-nav highlight ---------- */
   const sub = $$(".subnav a");
