@@ -1,9 +1,27 @@
 """Builds the Prudent Dental Clinic site (v2 layout). Content lives in content_data.py.
 Run:  python build.py"""
-import html, pathlib
+import hashlib, html, pathlib, re
+from PIL import Image
 from content_data import AREAS, QUOTES, FAQS, SPECIALISTS, MAP_IFRAME, initials, SERVICES9, VIDEOS
 
 ROOT = pathlib.Path(__file__).parent
+# large photos also get 480px and 720px copies, so phones download only what they show
+def srcset(name):
+    src = ROOT / f"assets/img/{name}.webp"
+    if name.startswith("logo") or not src.exists(): return ""
+    im = Image.open(src)
+    if im.width < 760: return ""
+    sizes = []
+    for w in (480, 720):
+        out = ROOT / f"assets/img/sm/{name}-{w}.webp"
+        if not out.exists():
+            out.parent.mkdir(exist_ok=True)
+            im.resize((w, round(im.height * w / im.width)), Image.LANCZOS).save(out, "WEBP", quality=78, method=6)
+        sizes.append(f"assets/img/sm/{name}-{w}.webp {w}w")
+    return f' srcset="{", ".join(sizes)}, assets/img/{name}.webp {im.width}w" sizes="(max-width: 760px) 92vw, 50vw"'
+
+# changes whenever the CSS or JS changes, so browsers can cache them for a long time
+ASSET_V = hashlib.md5(b"".join((ROOT / f).read_bytes() for f in ("assets/site.css", "assets/site.js"))).hexdigest()[:8]
 E = html.escape
 PHONE, PHONE_D = "+917028722200", "+91 70287 22200"
 WA = "https://wa.me/917028722200?text=Hello%20Prudent%20Dental%20Clinic%2C%20I%27d%20like%20to%20book%20a%20visit."
@@ -52,7 +70,7 @@ def page(file, title, desc, body, active=None):
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='16' fill='%231D6A56'/><path d='M10 8.5c2-1.6 4.2-.4 6 .4 1.8-.8 4-2 6-.4 2.2 1.8 1.4 6-.4 9.4-.9 1.8-1.2 6-2.6 6-1.6 0-1.3-4.8-3-4.8s-1.4 4.8-3 4.8c-1.4 0-1.7-4.2-2.6-6C8.6 14.5 7.8 10.3 10 8.5z' fill='%23F3F8F6'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@200..600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/site.css">
+<link rel="stylesheet" href="assets/site.css?v={ASSET_V}">
 </head>
 <body>
 <a class="sr" href="#main">Skip to content</a>
@@ -85,9 +103,12 @@ def page(file, title, desc, body, active=None):
 </div></footer>
 <nav class="actbar" aria-label="Quick actions"><a href="tel:{PHONE}">{PHONE_I}Call</a><a class="a-wa" href="{WA}" target="_blank" rel="noopener">{WA_I}WhatsApp</a><a class="a-book" href="book.html" data-book>{CAL}Book a visit</a></nav>
 <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js" defer></script>
-<script src="assets/site.js" defer></script>
+<script src="assets/site.js?v={ASSET_V}" defer></script>
 </body>
 </html>"""
+    # off-screen images decode off the main thread, so scrolling stays smooth
+    doc = doc.replace('loading="lazy"', 'loading="lazy" decoding="async"')
+    doc = re.sub(r'<img src="assets/img/([\w-]+)\.webp"', lambda m: f'<img src="assets/img/{m[1]}.webp"' + srcset(m[1]), doc)
     (ROOT / file).write_text(doc, encoding="utf-8")
     print("wrote", file)
 
@@ -156,7 +177,7 @@ home = f"""
     <div class="hero__meta" data-a style="--d:5"><span>{SUN}Open 7 days</span><span>{USERS}MDS specialists</span><span>{RUPEE}Written estimate first</span></div>
   </div>
   <div class="hero__art"><img src="assets/img/dr-bansal.webp" width="800" height="1139" alt="Dr. Puja Bansal, lead dentist" fetchpriority="high">
-    <div class="rating" data-a style="--d:5"><img src="assets/img/team-care.webp" alt=""><span><b>4.5 {STAR}</b><small>from 88 patient reviews<br>27 years of care</small></span></div></div>
+    <div class="rating" data-a style="--d:5"><img src="assets/img/team-care-thumb.webp" width="140" height="140" alt=""><span><b>4.5 {STAR}</b><small>from 88 patient reviews<br>27 years of care</small></span></div></div>
 </div></div></section>
 
 <section class="section"><div class="wrap">
@@ -300,8 +321,11 @@ stories = phead("Reviews", "Loved by patients <b>across Pune</b>", "Real experie
 page("stories.html", "Patient reviews · Prudent Dental Clinic, Viman Nagar", "What patients say about Dr. Puja Bansal and Prudent Dental Clinic.", stories, "stories.html")
 
 # ----------------------------------------------------------------- FAQ --
+# one real clinic photo beside each topic
+FAQ_IMG = {"visiting": ("c16", "The treatment room at Prudent Dental Clinic"), "treatments": ("c03", "Dr. Bansal treating a patient"),
+           "costs": ("hygiene", "Treatment with gloves, mask and a clean, lit chair"), "emergency": ("checkup", "A patient being seen at the chair")}
 fsub = "".join(f'<a href="#{k}">{E(v[0])}</a>' for k, v in FAQS.items())
-fsec = "".join(f'<section id="{k}" class="section" style="padding-top:clamp(2.5rem,5vw,4rem);scroll-margin-top:calc(var(--head-h) + 70px)"><div class="wrap split"><h2 class="h" data-a style="font-size:var(--t-xl)">{E(v[0])}</h2><div data-a>{"".join(qa(q, a, i == 0) for i, (q, a) in enumerate(v[1]))}</div></div></section>' for k, v in FAQS.items())
+fsec = "".join(f'<section id="{k}" class="section" style="padding-top:clamp(2.5rem,5vw,4rem);scroll-margin-top:calc(var(--head-h) + 70px)"><div class="wrap split"><div class="faqside"><h2 class="h" data-a style="font-size:var(--t-xl)">{E(v[0])}</h2><figure class="faqside__ph" data-a style="--d:1"><img src="assets/img/{FAQ_IMG[k][0]}.webp" alt="{E(FAQ_IMG[k][1])}" loading="lazy"></figure></div><div data-a>{"".join(qa(q, a, i == 0) for i, (q, a) in enumerate(v[1]))}</div></div></section>' for k, v in FAQS.items())
 faq = phead("FAQ", "Questions? <b>We've got answers</b>", "Visiting us, treatments, costs and emergencies. Can't find yours? Ask us on WhatsApp.", "faq") + f'<nav class="subnav" aria-label="FAQ topics"><div class="wrap"><div>{fsub}</div></div></nav>{fsec}' + cta("Still have a question?", "Message us on WhatsApp and a real person from the clinic replies.")
 page("faq.html", "Dental FAQ · Prudent Dental Clinic, Viman Nagar", "Answers about first visits, implants, braces, costs, EMI, insurance, safety and emergencies.", faq, "faq.html")
 

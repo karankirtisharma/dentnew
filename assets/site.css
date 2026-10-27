@@ -420,8 +420,9 @@ h1, h2, h3, h4, p { margin: 0; }
 /* ---------- inner pages ---------- */
 .phead { padding-top: 14px; }
 .phead__panel { border-radius: 28px; background: var(--grad); padding: clamp(2.4rem, 6vw, 5rem) clamp(1.4rem, 5vw, 4.4rem); position: relative; overflow: hidden; isolation: isolate; }
-.phead__panel.has-art { padding-right: clamp(1.4rem, 20%, 16rem); }
-.phead__art { position: absolute; right: clamp(1.2rem, calc(34% - 12rem), 15rem); top: 50%; translate: 0 -50%; width: clamp(5.5rem, 12vw, 9.5rem); height: auto; max-height: 60%; object-fit: contain; z-index: -1; pointer-events: none; filter: drop-shadow(0 18px 30px rgba(18, 60, 48, .12)); }
+.phead__panel { --art-w: clamp(5.5rem, 12vw, 9.5rem); }
+.phead__panel.has-art { padding-right: calc(21% + var(--art-w) / 2 + 1.5rem); }
+.phead__art { position: absolute; right: calc(21% - var(--art-w) / 2); top: 50%; translate: 0 -50%; width: var(--art-w); height: auto; max-height: 60%; object-fit: contain; z-index: -1; pointer-events: none; filter: drop-shadow(0 18px 30px rgba(18, 60, 48, .12)); }
 @media (prefers-reduced-motion: no-preference) { .phead__art { animation: float 7s ease-in-out infinite alternate; } }
 @keyframes float { to { transform: translateY(-8px); } }
 @media (max-width: 760px) { .phead__panel.has-art { padding-right: clamp(1.4rem, 5vw, 4.4rem); padding-top: 2.4rem; } .phead__art { top: 1.4rem; translate: none; right: 1.2rem; margin-right: 0; width: 4.5rem; } }
@@ -568,3 +569,9 @@ html.lenis, html.lenis body { height: auto; }
   .pin.is-pinned .shead > p { display: none; }
   .pin.is-pinned .vid__frame { aspect-ratio: 4 / 5; }
 }
+
+/* ---------- FAQ: a clinic photo under each topic heading, held while its questions scroll ---------- */
+.faqside__ph { margin: 1.6rem 0 0; border-radius: var(--r); overflow: hidden; box-shadow: var(--sh-1); aspect-ratio: 4 / 3; max-width: 30rem; }
+.faqside__ph img { width: 100%; height: 100%; object-fit: cover; display: block; }
+@media (min-width: 861px) { .faqside { position: sticky; top: calc(var(--head-h) + 96px); align-self: start; } }
+@media (max-width: 860px) { .faqside__ph { aspect-ratio: 16 / 9; margin: 1rem 0 1.2rem; } }
